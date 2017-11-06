@@ -1,6 +1,7 @@
 var restify = require("restify");
 var md5 = require("md5");
 var User = require("./models/user");
+var Task = require("./models//task");
 let mongoose = require("mongoose");
 let db = mongoose.connect("mongodb://localhost/logger");
 db.connection.on("error", err => {
@@ -20,17 +21,17 @@ const { result } = require("./util");
 var server = restify.createServer();
 
 server.use(restify.plugins.bodyParser());
-const corsMiddleware = require('restify-cors-middleware')
+const corsMiddleware = require("restify-cors-middleware");
 
 const cors = corsMiddleware({
- // preflightMaxAge: 5, //Optional
-  origins: ['*'],
- // allowHeaders: ['API-Token'],
- // exposeHeaders: ['API-Token-Expiry']
-})
+  // preflightMaxAge: 5, //Optional
+  origins: ["*"]
+  // allowHeaders: ['API-Token'],
+  // exposeHeaders: ['API-Token-Expiry']
+});
 
-server.pre(cors.preflight)
-server.use(cors.actual)
+server.pre(cors.preflight);
+server.use(cors.actual);
 
 server.get("/hello/:name", respond);
 server.head("/hello/:name", respond);
@@ -44,12 +45,12 @@ server.post("/login", (req, res, next) => {
     (err, users) => {
       if (err) throw err;
       if (users.length == 0) {
-        res.send(result("fail","不存在该用户"));
+        res.send(result("fail", "不存在该用户"));
       } else {
         if (users[0].password == md5(password)) {
-          res.send(result("sucess","成功登陆"));
+          res.send(result("sucess", "成功登陆"));
         } else {
-          res.send(result("fail","密码错误"));
+          res.send(result("fail", "密码错误"));
         }
       }
     }
@@ -68,12 +69,47 @@ server.post("/registered", (req, res, next) => {
   user.save(err => {
     if (err) {
       console.log("注册失败", err);
-      res.send(result("fail","注册失败"));
+      res.send(result("fail", "注册失败"));
     } else {
       console.log("注册成功");
-      res.send(result("sucess","注册成功"));
+      res.send(result("sucess", "注册成功"));
     }
   });
+  next();
+});
+
+server.post("/task/save", (req, res, next) => {
+  let task = new Task();
+  for (let i in req.body) {
+    task[i] = req.body[i];
+  }
+  task.save(err => {
+    if (err) {
+      console.log("存储任务失败", err);
+      res.send(result("fail", "存储任务失败"));
+    } else {
+      console.log("存储任务成功");
+      res.send(result("sucess", "存储任务成功"));
+    }
+  });
+
+  next();
+});
+
+server.get("/tasks", (req, res, next) => {
+  // let { account } = req.body;
+  Task.find(
+    {
+      // account
+    },
+    (err, tasks) => {
+      if (err) {
+        console.log(err);
+        res.send(result("fail", "查询失败"));
+      }
+      res.send({ result: "sucess", data: tasks });
+    }
+  );
   next();
 });
 
