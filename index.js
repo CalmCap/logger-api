@@ -91,22 +91,41 @@ server.post("/registered", (req, res, next) => {
 });
 
 server.post("/task/save", (req, res, next) => {
-  let task = new Task();
-  for (let i in req.body) {
-    task[i] = req.body[i];
-  }
-  task.save(err => {
-    if (err) {
-      console.log("存储任务失败", err);
-      res.send(result("fail", "存储任务失败"));
-    } else {
-      console.log("存储任务成功");
-      res.send(result("sucess", "存储任务成功"));
+  let task = req.body;
+  Task.update(
+    { title: task.title, account: task.account },
+    task,
+    { upsert: true, multi: true },
+    (err, datas) => {
+      if (err) {
+        console.log("存储任务失败", err);
+        res.send(result("fail", "存储任务失败"));
+      } else {
+        console.log("存储任务成功");
+        res.send(result("sucess", "存储任务成功"));
+      }
     }
-  });
-
+  );
   next();
 });
+
+// server.post("/task/update", (req, res, next) => {
+//   let task = new Task();
+//   console.log("存储任务", req.body);
+//   for (let i in req.body) {
+//     task[i] = req.body[i];
+//   }
+//   task.save(err => {
+//     if (err) {
+//       console.log("存储任务失败", err);
+//       res.send(result("fail", "存储任务失败"));
+//     } else {
+//       console.log("存储任务成功");
+//       res.send(result("sucess", "存储任务成功"));
+//     }
+//   });
+//   next();
+// });
 
 server.get("/tasks/:account", (req, res, next) => {
   let { account } = req.params;
