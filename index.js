@@ -48,7 +48,19 @@ server.post("/login", (req, res, next) => {
         res.send(result("fail", "不存在该用户"));
       } else {
         if (users[0].password == md5(password)) {
-          res.send(result("sucess", "成功登陆"));
+          Task.find(
+            {
+              account
+            },
+            (err, tasks) => {
+              if (err) {
+                console.log(err);
+                res.send(result("fail", "查询失败"));
+              }
+              res.send({ result: "sucess", message: "成功登陆", data: tasks });
+            }
+          );
+          // res.send(result("sucess", "成功登陆"));
         } else {
           res.send(result("fail", "密码错误"));
         }
@@ -96,11 +108,11 @@ server.post("/task/save", (req, res, next) => {
   next();
 });
 
-server.get("/tasks", (req, res, next) => {
-  // let { account } = req.body;
+server.get("/tasks/:account", (req, res, next) => {
+  let { account } = req.params;
   Task.find(
     {
-      // account
+      account
     },
     (err, tasks) => {
       if (err) {

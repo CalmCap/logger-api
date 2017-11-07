@@ -26,6 +26,6 @@ let TaskSchema = new Schema({
   initTime: { type: String, required: true }
 });
 
-TaskSchema.index({account:1,title:1,class:1});
+TaskSchema.index({ account: 1, title: 1, class: 1 }, { unique: true });
 
 module.exports = mongoose.model("Task", TaskSchema);
