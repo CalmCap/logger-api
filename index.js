@@ -109,6 +109,20 @@ server.post("/task/save", (req, res, next) => {
   next();
 });
 
+server.post("/task/delete", (req, res, next) => {
+  let task = req.body;
+  Task.remove({ title: task.title, account: task.account }, (err, datas) => {
+    if (err) {
+      console.log("删除任务失败", err);
+      res.send(result("fail", "删除任务失败"));
+    } else {
+      console.log("删除任务成功");
+      res.send(result("sucess", "删除任务成功"));
+    }
+  });
+  next();
+});
+
 // server.post("/task/update", (req, res, next) => {
 //   let task = new Task();
 //   console.log("存储任务", req.body);
