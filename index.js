@@ -57,7 +57,12 @@ server.post("/login", (req, res, next) => {
                 console.log(err);
                 res.send(result("fail", "查询失败"));
               }
-              res.send({ result: "sucess", message: "成功登陆", data: tasks });
+              res.send({
+                result: "sucess",
+                message: "成功登陆",
+                data: tasks,
+                score: users[0].score
+              });
             }
           );
           // res.send(result("sucess", "成功登陆"));
@@ -78,6 +83,7 @@ server.post("/registered", (req, res, next) => {
   user.username = Math.random()
     .toString(16)
     .slice(2);
+  user.score = 0;
   user.save(err => {
     if (err) {
       console.log("注册失败", err);
@@ -123,23 +129,27 @@ server.post("/task/delete", (req, res, next) => {
   next();
 });
 
-// server.post("/task/update", (req, res, next) => {
-//   let task = new Task();
-//   console.log("存储任务", req.body);
-//   for (let i in req.body) {
-//     task[i] = req.body[i];
-//   }
-//   task.save(err => {
-//     if (err) {
-//       console.log("存储任务失败", err);
-//       res.send(result("fail", "存储任务失败"));
-//     } else {
-//       console.log("存储任务成功");
-//       res.send(result("sucess", "存储任务成功"));
-//     }
-//   });
-//   next();
-// });
+server.post("/task/addFtime", (req, res, next) => {
+  console.log("addFtime");
+  let { account, ftime, stime, title } = req.body;
+  let status = ftime == stime ? 2 : 1;
+  let data = { ftime, status };
+  Task.update(
+    { title, account },
+    data,
+    { upsert: true, multi: true },
+    (err, datas) => {
+      if (err) {
+        console.log("添加完成次数失败", err);
+        res.send(result("fail", "添加完成次数失败"));
+      } else {
+        console.log("添加完成次数成功");
+        res.send(result("sucess", "添加完成次数成功"));
+      }
+    }
+  );
+  next();
+});
 
 server.get("/tasks/:account", (req, res, next) => {
   let { account } = req.params;
