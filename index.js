@@ -1,7 +1,8 @@
 var restify = require("restify");
 var md5 = require("md5");
 var User = require("./models/user");
-var Task = require("./models//task");
+var Task = require("./models/task");
+var Logger = require("./models/logger");
 let mongoose = require("mongoose");
 let db = mongoose.connect("mongodb://localhost/logger");
 db.connection.on("error", err => {
@@ -131,7 +132,7 @@ server.post("/task/delete", (req, res, next) => {
 
 server.post("/task/addFtime", (req, res, next) => {
   console.log("addFtime");
-  let { account, ftime, stime, title } = req.body;
+  let { account, ftime, stime, title, score } = req.body;
   let status = ftime == stime ? 2 : 1;
   let data = { ftime, status };
   Task.update(
@@ -143,8 +144,32 @@ server.post("/task/addFtime", (req, res, next) => {
         console.log("添加完成次数失败", err);
         res.send(result("fail", "添加完成次数失败"));
       } else {
-        console.log("添加完成次数成功");
-        res.send(result("sucess", "添加完成次数成功"));
+        User.update(
+          { account },
+          { score },
+          { upsert: true, multi: true },
+          (err, datas) => {
+            if (err) {
+              console.log("添加完成次数失败", err);
+              res.send(result("fail", "添加完成次数失败"));
+            } else {
+              let logger = new Logger();
+              logger.account = account;
+              logger.title = title;
+              logger.score = score;
+              logger.time = new Date().valueOf();
+              logger.save(err => {
+                if (err) {
+                  console.log("添加完成次数失败", err);
+                  res.send(result("fail", "添加完成次数失败"));
+                } else {
+                  console.log("添加完成次数成功");
+                  res.send(result("sucess", "添加完成次数成功"));
+                }
+              });
+            }
+          }
+        );
       }
     }
   );
